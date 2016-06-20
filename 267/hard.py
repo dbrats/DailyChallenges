@@ -16,36 +16,16 @@ def importFromFile(filename):
     for x in lines[1:]:
         zombies.append(tuple(x.split()))
 
-    # Debug
-    print ("Size: " + str(size[0]) + " : " + str(size[1]))
-    for z in zombies:
-        print ("Zom" + ": " + str(z[0]) + " : " + str(z[1]))
-
-    '''
-    X.....X...
-    ..........
-    ....X.....
-    ..........
-    ......X...
-    .....X....
-
-    X.....X...
-    ..........
-    ....X.....
-    ..........
-    ......X...
-    .....X....
-
-    '''
-
     # Create map
-    for c in range(0, int(size[0])):
-        line = ['.'] * int(size[1])
-        zombsOnLine = [z for z in zombies if int(z[0]) == c]
-        for z in zombsOnLine:
-            line[int(z[1])] = 'X'
-            #print("Yes!")
-        print("".join(line))
+    printMap = False
+    if printMap:
+        for c in range(0, int(size[0])):
+            line = ['.'] * int(size[1])
+            zombsOnLine = [z for z in zombies if int(z[0]) == c]
+            for z in zombsOnLine:
+                line[int(z[1])] = 'X'
+                #print("Yes!")
+            print("".join(line))
 
     # End Debug
 
@@ -59,19 +39,10 @@ def _hit(shot, pos):
 
 def findOptimalShot():
     global size
-    print("Opt")
-
-    '''
-    X.....X...
-    ..........
-    ....X.....
-    ..........
-    ......X...
-    .....X....
-    '''
 
     bestShotKills = -1
     bestShotDir = (-1, -1)
+    bestCoords = []
 
     vertCount = 0
     count = 0
@@ -80,15 +51,17 @@ def findOptimalShot():
     # Search vertically
     print ("For in range... " + str(size) + " : " + str(len(zombies)))
 
-    # Optimise this, please
+    # TODO: Optimise this, please
     # Horizontally
     print ("horz")
     for x in range (0, int(size[0])):
         # New shot
         count = 0
         shotZombies = []
+        testedCoords = []
 
         for y in range(0, int(size[1])):
+            testedCoords.append((x, y))
             for z in zombies:
                 if _hit(z, (x, y)) and not z in shotZombies:
                     count += 1
@@ -96,6 +69,7 @@ def findOptimalShot():
             if count > bestShotKills:
                 bestShotKills = count
                 bestShotDir = (x, 0)
+                bestCoords = testedCoords
 
     # Vertically
     print ("vert")
@@ -103,8 +77,10 @@ def findOptimalShot():
         # New shot
         count = 0
         shotZombies = []
+        testedCoords = []
 
         for x in range(0, int(size[0])):
+            testedCoords.append((x, y))
             for z in zombies:
                 if _hit(z, (x, y)) and not z in shotZombies:
                     count += 1
@@ -112,6 +88,7 @@ def findOptimalShot():
             if count > bestShotKills:
                 bestShotKills = count
                 bestShotDir = (0, y)
+                bestCoords = testedCoords
 
     # 0.0, 1.1, 2.2, 3.3
     # Diagonally d-l-r
@@ -123,89 +100,123 @@ def findOptimalShot():
     ......X...
     .....X....
     '''
+
     print ("dlr")
     for col in range (0, int(size[0])):
         # New shot
         count = 0
         shotZombies = []
-        print("reset")
+        testedCoords = []
 
         # Don't use double for...
+        y = 0
         for x in range (col, int(size[0])):
-            for y in range(0, int(size[1])):
-                for z in zombies:
-                    if _hit(z, (x, y)) and not z in shotZombies:
-                        print (str(x) + ":" + str(y) + " killed " + str(z))
-                        count += 1
-                        shotZombies.append(z)
-                if count > bestShotKills:
-                    bestShotKills = count
-                    bestShotDir = (col, 1)
-                    print("Zombies")
-                    print(str(shotZombies))
-
-    '''
-    # Diagonally d-r-l
-    for x in range (0, int(size[1])):
-        # New shot
-        print ("Reset")
-        count = 0
-        shotZombies = []
-
-        for y in range(0, int(size[0])):
+            testedCoords.append((x, y))
+            #for y in range(0, int(size[1])):
             for z in zombies:
-                if _hit(z, (y, x)) and not z in shotZombies:
-                    print("HIT!")
+                if _hit(z, (x, y)) and not z in shotZombies:
                     count += 1
                     shotZombies.append(z)
             if count > bestShotKills:
                 bestShotKills = count
-                bestShotDir = (x, y)
+                bestShotDir = (col, 1)
+                bestCoords = testedCoords
+            y += 1
+            if y >= int(size[1]):
+                break
 
-    # Diagonally u-l-r
-    for x in range (0, int(size[1])):
+    print("drl")
+    for col in range (int(size[0]) - 1, -1, -1):
         # New shot
-        print ("Reset")
         count = 0
         shotZombies = []
+        testedCoords = []
 
-        for y in range(0, int(size[0])):
+        # Don't use double for...
+        y = 0
+        for x in range (col, -1, -1):
+            testedCoords.append((x, y))
+            #for y in range(0, int(size[1])):
             for z in zombies:
-                if _hit(z, (y, x)) and not z in shotZombies:
-                    print("HIT!")
+                if _hit(z, (x, y)) and not z in shotZombies:
+                    #print (str(x) + ":" + str(y) + " killed " + str(z))
                     count += 1
                     shotZombies.append(z)
             if count > bestShotKills:
                 bestShotKills = count
-                bestShotDir = (x, y)
+                bestShotDir = (col, 1)
+                bestCoords = testedCoords
+            y += 1
+            if y >= int(size[1]):
+                break
 
-    # Diagonally u-r-l
-    for x in range (0, int(size[1])):
+    print("ulr")
+    for col in range (0, int(size[0])):
         # New shot
-        print ("Reset")
         count = 0
         shotZombies = []
+        testedCoords = []
 
-        for y in range(0, int(size[0])):
+        # Don't use double for...
+        y = int(size[1]) - 1
+        for x in range (col, int(size[0])):
+            testedCoords.append((x, y))
+            #for y in range(0, int(size[1])):
             for z in zombies:
-                if _hit(z, (y, x)) and not z in shotZombies:
-                    print("HIT!")
+                if _hit(z, (x, y)) and not z in shotZombies:
                     count += 1
                     shotZombies.append(z)
             if count > bestShotKills:
                 bestShotKills = count
-                bestShotDir = (x, y)
+                bestShotDir = (col, 1)
+                bestCoords = testedCoords
+            y -= 1
+            if y < 0:
+                break
 
-    '''
+    print("url")
+    for col in range (int(size[0]) - 1, -1, -1):
+        # New shot
+        count = 0
+        shotZombies = []
+        testedCoords = []
+
+        # Don't use double for...
+        y = int(size[1]) - 1
+        for x in range (col, -1, -1):
+            testedCoords.append((x, y))
+            #for y in range(0, int(size[1])):
+            for z in zombies:
+                if _hit(z, (x, y)) and not z in shotZombies:
+                    #print (str(x) + ":" + str(y) + " killed " + str(z))
+                    count += 1
+                    shotZombies.append(z)
+            if count > bestShotKills:
+                bestShotKills = count
+                bestShotDir = (col, 1)
+                bestCoords = testedCoords
+            y -= 1
+            if y < 0:
+                break
+
+    # Create map
+    printMap = False
+    if printMap:
+        for c in range(0, int(size[0])):
+            line = ['.'] * int(size[1])
+            zombsOnLine = [z for z in zombies if int(z[0]) == c]
+            for z in zombsOnLine:
+                line[int(z[1])] = 'X'
+                #print("Yes!")
+            coordsOnLine = [p for p in bestCoords if int(p[0]) == c]
+            for p in coordsOnLine:
+                line[int(p[1])] = '#'
+            print("".join(line))
+
+
     print ("BestShotKills: " + str(bestShotKills) + ", BestShotDirection: " + str(bestShotDir[0]) + ":" + str(bestShotDir[1]))
 
-        # Search horizontally
-        #
-
-    # Search vertically
-    # Search diagonally l-r
-    # Search diagonally r-l
 
 if __name__ == '__main__':
-    importFromFile("./input")
+    importFromFile("./hugeinput")
     findOptimalShot()
