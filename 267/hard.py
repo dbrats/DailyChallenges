@@ -41,6 +41,8 @@ def findOptimalShot():
     global size
 
     bestShotKills = -1
+
+
     bestShotDir = (-1, -1)
     bestCoords = []
 
@@ -53,6 +55,7 @@ def findOptimalShot():
 
     # TODO: Optimise this, please
     # Horizontally
+
     print ("horz")
     for x in range (0, int(size[0])):
         # New shot
@@ -150,55 +153,6 @@ def findOptimalShot():
             if y >= int(size[1]):
                 break
 
-    print("ulr")
-    for col in range (0, int(size[0])):
-        # New shot
-        count = 0
-        shotZombies = []
-        testedCoords = []
-
-        # Don't use double for...
-        y = int(size[1]) - 1
-        for x in range (col, int(size[0])):
-            testedCoords.append((x, y))
-            #for y in range(0, int(size[1])):
-            for z in zombies:
-                if _hit(z, (x, y)) and not z in shotZombies:
-                    count += 1
-                    shotZombies.append(z)
-            if count > bestShotKills:
-                bestShotKills = count
-                bestShotDir = (col, 1)
-                bestCoords = testedCoords
-            y -= 1
-            if y < 0:
-                break
-
-    print("url")
-    for col in range (int(size[0]) - 1, -1, -1):
-        # New shot
-        count = 0
-        shotZombies = []
-        testedCoords = []
-
-        # Don't use double for...
-        y = int(size[1]) - 1
-        for x in range (col, -1, -1):
-            testedCoords.append((x, y))
-            #for y in range(0, int(size[1])):
-            for z in zombies:
-                if _hit(z, (x, y)) and not z in shotZombies:
-                    #print (str(x) + ":" + str(y) + " killed " + str(z))
-                    count += 1
-                    shotZombies.append(z)
-            if count > bestShotKills:
-                bestShotKills = count
-                bestShotDir = (col, 1)
-                bestCoords = testedCoords
-            y -= 1
-            if y < 0:
-                break
-
     # Create map
     printMap = False
     if printMap:
@@ -218,5 +172,5 @@ def findOptimalShot():
 
 
 if __name__ == '__main__':
-    importFromFile("./hugeinput")
+    importFromFile("./input")
     findOptimalShot()
