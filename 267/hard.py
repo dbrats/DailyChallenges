@@ -2,110 +2,70 @@
 
 from collections import defaultdict
 
-# Globals
-size = (0, 0)
-zombies = list()
-comparisons = 0
-
-
-def _hit(shot, pos):
-    global comparisons
-    comparisons += 1
-    if int(shot[0]) >= int(pos[0]) - 1 and \
-       int(shot[0]) <= int(pos[0]) + 1 and \
-       int(shot[1]) >= int(pos[1]) - 1 and \
-       int(shot[1]) <= int(pos[1]) + 1:
-        return True
-    return False
-
-
-def _printMap():
+def _printMap(size, zombies):
     # Create map
     for c in range(0, int(size[0])):
         line = ['.'] * int(size[1])
         zombsOnLine = [z for z in zombies if int(z[0]) == c]
         for z in zombsOnLine:
             line[int(z[1])] = 'X'
-            #print("Yes!")
+
         print("".join(line))
 
 
 def importFromFile(filename):
-    global size
     with open(filename, 'r') as f:
         text = f.read()
 
+    # Strip unnecessary whitespace and split
     text = text.rstrip()
     lines = text.split('\n')
+
     size = (lines[0].split())
 
+    zombies = []
+    # Add a list of the zombie positions.
     for x in lines[1:]:
         zombies.append(tuple(x.split()))
 
+    # Warning: Don't enable this on big data.
     debugMap = True
     if debugMap:
-        _printMap()
+        _printMap(size, zombies)
+
+    return size, zombies
 
 
-def findOptimalShot():
-    global size
+def findOptimalShot(zombies):
+    # Add default count of 0 to all possible zombies.
+    possibleShots = defaultdict(lambda: 0)
 
-    bestShotKills = -1
-
-    # Search vertically
-    print ("For in range... " + str(size) + " : " + str(len(zombies)))
-    loops = 0
-    zombieLines = defaultdict(lambda: 0)
     for z in zombies:
-        loops += 1
         x = int(z[0])
         y = int(z[1])
 
-        # TODO: Optimise this code, split into functions, and less dict lookups.
-        zombieLines[(1, x)] += 1
-        zombieLines[(1, x-1)] += 1
-        zombieLines[(1, x+1)] += 1
-        zombieLines[(2, y)] += 1
-        zombieLines[(2, y-1)] += 1
-        zombieLines[(2, y+1)] += 1
-        zombieLines[(3, y-x)] += 1
-        zombieLines[(3, y-x+1)] += 1
-        zombieLines[(3, y-x-1)] += 1
-        zombieLines[(4, y+x)] += 1
-        zombieLines[(4, y+x+1)] += 1
-        zombieLines[(4, y+x-1)] += 1
+        # IDs of "shots" to increment, id = (type, "shot position")
+        # 1 = vertical
+        # 2 = horizontal
+        # 3 and 4 = diagonal shots
+        availableShots = [ (1, x), (1, x-1), (1, x+1) \
+                         , (2, y), (2, y-1), (2, y+1) \
+                         , (3, y-x), (3, y-x-1), (3, y-x+1) \
+                         , (4, y+x), (4, y+x-1), (4, y+x+1)]
 
-        if zombieLines[(1, x)] > bestShotKills:
-            bestShotKills = zombieLines[(1, x)]
-        elif zombieLines[(1, x-1)] > bestShotKills:
-            bestShotKills = zombieLines[(1, x-1)]
-        elif zombieLines[(1, x+1)] > bestShotKills:
-            bestShotKills = zombieLines[(1, x+1)]
-        elif zombieLines[(2, y)] > bestShotKills:
-            bestShotKills = zombieLines[(2, y)]
-        elif zombieLines[(2, y-1)] > bestShotKills:
-            bestShotKills = zombieLines[(2, y-1)]
-        elif zombieLines[(2, y+1)] > bestShotKills:
-            bestShotKills = zombieLines[(2, y+1)]
-        elif zombieLines[(3, y-x)] > bestShotKills:
-            bestShotKills = zombieLines[(3, y-x)]
-        elif zombieLines[(3, y-x-1)] > bestShotKills:
-            bestShotKills = zombieLines[(3, y-x-1)]
-        elif zombieLines[(3, y-x+1)] > bestShotKills:
-            bestShotKills = zombieLines[(3, y-x+1)]
-        elif zombieLines[(4, y+x)] > bestShotKills:
-            bestShotKills = zombieLines[(4, y+x)]
-        elif zombieLines[(4, y+x-1)] > bestShotKills:
-            bestShotKills = zombieLines[(4, y+x-1)]
-        elif zombieLines[(4, y+x+1)] > bestShotKills:
-            bestShotKills = zombieLines[(4, y+x+1)]
+        # Loop through all the shots needed to reach this and adjacent positions
+        for s in availableShots:
+            possibleShots[s] += 1
 
-
-    print ("BestShotKills: " + str(bestShotKills))
-    print ("Loops: " + str(loops))
+    # No need to do any comparisons until we have the full data.
+    return max(possibleShots.values())
 
 
 if __name__ == '__main__':
-    importFromFile("./input")
-    findOptimalShot()
-    print ("Comparisons: " + str(comparisons))
+    # Read grid size and zombie positions from the specified file.
+    size, zombies = importFromFile("./medium_input")
+    print ("Searching grid of size: " + str(size) + ", with " + str(len(zombies)) + " zombies.")
+
+    # Calculate the shot that can kill the most zombies at once.
+    bestShot = findOptimalShot(zombies)
+    print ("Most zombies that can be killed with a single shot: " + str(bestShot))
